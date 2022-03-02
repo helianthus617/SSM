@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
+  <display-name>SSM</display-name>
+  <welcome-file-list>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+  <!-- 配置Spring容器 -->
+  	<!-- 启动父容器,父容器不能访问子容器的组件 -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<!-- 指定Spring配置文件的文件 -->
+		<param-value>classpath:spring/applicationContext.xml</param-value>
+	</context-param>
+	<!-- Bootstraps the root web application context before servlet initialization 
+	在项目启动时,创建容器,ContextLoaderListener实现了javax.servlet.ServletContextListener接口
+	项目启动时=容器创建,项目关闭时=容器销毁
+	-->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+
+  <!-- 配置SpringMVC前端控制器 -->
+	<servlet>
+		<servlet-name>springDispatcherServlet</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<!-- 启动子容器,子容器能访问父容器的组件 -->
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>classpath:spring/applicationContext-mvc.xml</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<!-- Map all requests to the DispatcherServlet for handling -->
+	<servlet-mapping>
+		<servlet-name>springDispatcherServlet</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+	
+	<!-- 两个标准配置 -->
+	<!-- 解决乱码的filter -->
+	<filter>
+		<filter-name>CharacterEncodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<!-- 设置post方式提及的乱码 request.setCharacterEncoding("UTF-8), -->
+		<init-param>
+				<param-name>encoding</param-name>
+				<param-value>UTF-8</param-value>
+		</init-param>
+		<!-- 设置响应编码  response.setContentType("text/html;charset=utf-8") -->
+			<init-param>
+				<param-name>forceEncoding</param-name>
+				<param-value>true</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+	<filter-name>CharacterEncodingFilter</filter-name>
+	<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	
+	<!-- post,put...表单提交设置 -->
+	<filter>
+	<filter-name>HiddenHttpMethodFilter</filter-name>
+	<filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+    </filter>
+	<filter-mapping>
+		<filter-name>HiddenHttpMethodFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+</web-app>

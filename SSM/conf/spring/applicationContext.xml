@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+<!-- Spring除过控制器不要,其他的组件都要 -->
+<context:component-scan base-package="com.atguigu" >
+<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+</context:component-scan>
+
+<!-- 加载外部文件 -->
+<context:property-placeholder location="classpath:dbconfig.properties" />
+<!-- 配置数据源 -->
+ <bean id="comboPooledDataSource"
+ class="com.mchange.v2.c3p0.ComboPooledDataSource">
+  <property name="user" value="${jdbc.username}"></property>
+  <property name="password" value="${jdbc.password}"></property>
+  <property name="jdbcUrl" value="${jdbcUrl}"></property>
+  <property name="driverClass" value="${driverClass}"></property>
+ </bean>
+<!-- 配置mybatis -->
+<bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+<!-- 步骤1.配置文件位置 -->
+	<property name="configLocation" value="classpath:mybatis/mybatis-config.xml"></property>
+	<property name="dataSource" ref="comboPooledDataSource"></property>
+	<!--指定xml映射文件位置 -->
+	<property name="mapperLocations" value="classpath:mybatis/mapper/*.xml"></property>
+</bean>
+<!-- 步骤2.把Dao接口的实现加入容器中 -->
+<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+<property name="basePackage" value="com.atguigu.dao"></property>
+</bean>
+<!-- 配置事务管理器 -->
+ <bean id="dataSourceTransactionManager"
+ 	class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+	<constructor-arg name="dataSource" ref="comboPooledDataSource"></constructor-arg>
+ </bean>
+
+<!-- 配置事务切入点表达式-->
+ <aop:config>
+ <aop:pointcut expression="execution(* com.atguigu.service.*.*(..))" id="txPoint"/>
+ <aop:advisor advice-ref="myAdvice" pointcut-ref="txPoint"/>
+ </aop:config>
+ 
+ <!--配置事务属性-->
+<tx:advice id="myAdvice" transaction-manager="dataSourceTransactionManager">
+	<tx:attributes>
+	<tx:method name="*" rollback-for="java.lang.Exception"/>
+	</tx:attributes>
+</tx:advice>
+
+</beans>
